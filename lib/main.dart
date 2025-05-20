@@ -1,3 +1,4 @@
+import 'package:chatty_app/Themes/Light_Mode.dart';
 import 'package:flutter/material.dart';
 import 'Pages/Login_Page.dart';
 
@@ -6,11 +7,16 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp ({Super.key});
+  const MyApp ({super.key});
 
   @override
   Widget build (BuildContext context) {
-    return
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginPage(),
+      theme: lightmode,
+
+    );
   }
 
 }
