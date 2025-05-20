@@ -1,7 +1,7 @@
 import 'package:chatty_app/Themes/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'Pages/Login_Page.dart';
+import 'pages/login_Page.dart';
 
 void main() {
   runApp(

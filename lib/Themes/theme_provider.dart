@@ -1,5 +1,5 @@
-import 'package:chatty_app/Themes/Dark_Mode.dart';
-import 'package:chatty_app/Themes/Light_Mode.dart';
+import 'package:chatty_app/themes/Dark_Mode.dart';
+import 'package:chatty_app/themes/Light_Mode.dart';
 import 'package:flutter/material.dart';
 
 class ThemeProvider extends ChangeNotifier {

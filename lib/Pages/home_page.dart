@@ -1,4 +1,4 @@
-import 'package:chatapp/auth/auth_service.dart';
+import 'package:CHATTY_APP/lib/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../components/my_drawer.dart';
 
