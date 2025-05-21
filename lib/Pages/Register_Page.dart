@@ -1,19 +1,17 @@
-
 import 'package:chatty_app/Components/my_button.dart';
 import 'package:chatty_app/Components/my_textfield.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
-
+class RegisterPage extends StatelessWidget{
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pwController = TextEditingController();
+  
+  RegisterPage ({super.key});
 
-  LoginPage ({super.key});
-
-  void login(){}
+  void register (){}
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       body: Center(
@@ -55,8 +53,8 @@ class LoginPage extends StatelessWidget {
             const SizedBox(height: 25),
 
             MyButton(
-              text: "Login",
-              onTap: login,
+              text: "Register",
+              onTap: register,
             ),
 
             Row(
