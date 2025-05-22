@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 class RegisterPage extends StatelessWidget{
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pwController = TextEditingController();
+  final TextEditingController _confirmpwController = TextEditingController();
+  final void Function()? onTap;
+
   
-  RegisterPage ({super.key});
+  RegisterPage ({super.key, required this.onTap});
 
   void register (){}
 
@@ -28,7 +31,7 @@ class RegisterPage extends StatelessWidget{
             const SizedBox(height: 50),
 
             Text(
-              "Welcome back, you've been missed!", 
+              "Create an account", 
               style: TextStyle(color: Theme.of(context).colorScheme.primary,
               fontSize: 16,
               ),
@@ -50,6 +53,14 @@ class RegisterPage extends StatelessWidget{
               controller: _pwController,
             ),
 
+            const SizedBox(height: 10),
+
+            MyTextfield(
+              hintText: "Confirm Password",
+              obscureText: true,
+              controller: _confirmpwController,
+            ),
+
             const SizedBox(height: 25),
 
             MyButton(
@@ -61,17 +72,20 @@ class RegisterPage extends StatelessWidget{
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Not a member?",
+                  "Already have an account?",
                   style: 
                     TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
                   
 
-                Text(
-                  "Register now", 
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Text(
+                    "Login now", 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary),
+                  ),
                 ),
               ],
             ), 
