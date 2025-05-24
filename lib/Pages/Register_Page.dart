@@ -1,5 +1,6 @@
 import 'package:chatty_app/Components/my_button.dart';
 import 'package:chatty_app/Components/my_textfield.dart';
+import 'package:chatty_app/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class RegisterPage extends StatelessWidget{
@@ -11,7 +12,32 @@ class RegisterPage extends StatelessWidget{
   
   RegisterPage ({super.key, required this.onTap});
 
-  void register (){}
+  void register (BuildContext context){
+    final _auth = AuthService();
+    if (_pwController.text == _confirmpwController.text){
+      try {
+        _auth.signUpWithEmailPassword(
+          _emailController.text, 
+          _pwController.text,
+          );
+      } catch (e) {
+        showDialog(
+          context: context,
+          builder: (context)=> AlertDialog(
+            title: Text(e.toString()),
+          ),
+        );
+      }
+    }
+    else {
+      showDialog(
+          context: context,
+          builder: (context)=> const AlertDialog(
+            title: Text("Password tidak cocok"),
+          ),
+      );
+    } 
+  }
 
   @override
   Widget build(BuildContext context){
@@ -31,7 +57,7 @@ class RegisterPage extends StatelessWidget{
             const SizedBox(height: 50),
 
             Text(
-              "Create an account", 
+              "Buat Akun", 
               style: TextStyle(color: Theme.of(context).colorScheme.primary,
               fontSize: 16,
               ),
@@ -56,7 +82,7 @@ class RegisterPage extends StatelessWidget{
             const SizedBox(height: 10),
 
             MyTextfield(
-              hintText: "Confirm Password",
+              hintText: "Konfirmasi Password",
               obscureText: true,
               controller: _confirmpwController,
             ),
@@ -65,14 +91,14 @@ class RegisterPage extends StatelessWidget{
 
             MyButton(
               text: "Register",
-              onTap: register,
+              onTap: ()=> register(context),
             ),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Already have an account?",
+                  "Sudah punya akun?",
                   style: 
                     TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
@@ -81,7 +107,7 @@ class RegisterPage extends StatelessWidget{
                 GestureDetector(
                   onTap: onTap,
                   child: Text(
-                    "Login now", 
+                    "Login sekarang", 
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary),
