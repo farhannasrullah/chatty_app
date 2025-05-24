@@ -1,6 +1,6 @@
 import 'package:chatty_app/Components/my_button.dart';
 import 'package:chatty_app/Components/my_textfield.dart';
-import 'package:chatty_app/auth/auth_service.dart';
+import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class RegisterPage extends StatelessWidget{
