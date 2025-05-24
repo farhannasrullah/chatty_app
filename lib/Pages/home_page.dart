@@ -22,6 +22,9 @@ void logout (){
     return Scaffold(
       appBar: AppBar(
         title: const Text("Home"),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.grey,
+        elevation: 0,
         actions: [
           IconButton(onPressed: logout, icon: Icon(Icons.logout))
         ],
@@ -55,6 +58,7 @@ void logout (){
       onTap: (){
           Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatPage(
             receiverEmail: UserData["Email"],
+            receiverID: UserData["uid"],
             ),
           ),
         );
