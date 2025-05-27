@@ -1,4 +1,3 @@
-
 import 'package:chatty_app/Components/user_tile.dart';
 import 'package:chatty_app/Pages/chat_page.dart';
 import 'package:chatty_app/services/auth/auth_service.dart';
@@ -10,12 +9,17 @@ class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   final ChatService _chatService = ChatService();
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService(); // Use this instance
 
-void logout (){
-  final auth = AuthService();
-  auth.signOut();
-}
+  // void logout() { // Original logout
+  //   final auth = AuthService(); // Unnecessary new instance
+  //   auth.signOut();
+  // }
+
+  // Corrected logout to use the existing _authService instance
+  void logout() {
+    _authService.signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,46 +30,77 @@ void logout (){
         foregroundColor: Colors.grey,
         elevation: 0,
         actions: [
-          IconButton(onPressed: logout, icon: Icon(Icons.logout))
-        ],
-      ), 
+          IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
+        ], // Added const for Icon
+      ),
       drawer: const MyDrawer(),
       body: _buildUserList(),
-    ); 
+    );
   }
-  Widget _buildUserList(){
+
+  Widget _buildUserList() {
     return StreamBuilder(
       stream: _chatService.getUsersStream(),
       builder: (context, snapshot) {
-        if (snapshot.hasError){
+        if (snapshot.hasError) {
           return const Text("Error");
         }
-        if (snapshot.connectionState == ConnectionState.waiting){
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Text("Loading..");
         }
+        // It's good practice to check if snapshot.data is null before using '!'
+        if (snapshot.data == null) {
+          return const Text(
+            "No users found.",
+          ); // Or some other appropriate widget
+        }
         return ListView(
-          children: snapshot.data!
-            .map<Widget>((UserData)=> _buildUserListItem(UserData, context))
-            .toList(),
+          children:
+              snapshot.data!
+                  .map<Widget>(
+                    // Changed UserData to userData for convention
+                    (userData) => _buildUserListItem(userData, context),
+                  )
+                  .toList(),
         );
       },
     );
   }
-  Widget _buildUserListItem(Map<String, dynamic> UserData, BuildContext context){
-    if (UserData["email"] != _authService.getCurentUser()!.email){
+
+  Widget _buildUserListItem(
+    // Changed UserData to userData for convention
+    Map<String, dynamic> userData,
+    BuildContext context,
+  ) {
+    // Assuming the current user's email is available and not null
+    final currentUserEmail = _authService.getCurentUser()?.email;
+
+    // Ensure currentUserEmail is not null before comparison
+    if (currentUserEmail != null && userData["email"] != currentUserEmail) {
+      // Consistently use "email" (or whatever the correct key is)
+      // Make sure the key "email" exists and is what you intend to display/pass
+      final String userEmail =
+          userData["email"] as String? ?? "No Email"; // Provide a fallback
+      final String userID =
+          userData["uid"] as String? ?? ""; // Provide a fallback
+
       return UserTile(
-      text: UserData["Email"],
-      onTap: (){
-          Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatPage(
-            receiverEmail: UserData["Email"],
-            receiverID: UserData["uid"],
+        text: userEmail, // Use the corrected key
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => ChatPage(
+                    receiverEmail: userEmail, // Use the corrected key
+                    receiverID: userID, // Make sure "uid" is the correct key
+                  ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
     } else {
-      return Container();
+      return Container(); // Don't show the current user or if email is missing
     }
   }
 }
