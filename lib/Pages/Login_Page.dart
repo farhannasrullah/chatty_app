@@ -3,6 +3,7 @@ import 'package:chatty_app/Components/my_button.dart';
 import 'package:chatty_app/Components/my_textfield.dart';
 import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
+import '../Pages/home_page.dart';
 
 class LoginPage extends StatelessWidget {
 
@@ -16,6 +17,10 @@ class LoginPage extends StatelessWidget {
     final authService = AuthService();
     try {
       await authService.signInwithEmailPassword(_emailController.text, _pwController.text,);
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+          );
     }
     catch (e){
       showDialog(
