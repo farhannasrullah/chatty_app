@@ -34,11 +34,9 @@ flutter_native_splash:
   image: assets/images/logo.png
   android: true
 
-  
-
 
 flutter_launcher_icons:
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/logosquare.jpg"
   android: true
   ios: true
 
@@ -49,3 +47,4 @@ flutter:
   assets:
     - assets/images/default_profile.jpg
     - assets/images/logo.png
+    - assets/images/logosquare.jpg
