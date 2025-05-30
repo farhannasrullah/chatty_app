@@ -4,6 +4,7 @@ import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:chatty_app/services/chat/chat_service.dart';
 import 'package:flutter/material.dart';
 import '../Components/my_drawer.dart';
+import '../Pages/Login_Page.dart'; // Pastikan path ini benar
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -17,8 +18,40 @@ class HomePage extends StatelessWidget {
   // }
 
   // Corrected logout to use the existing _authService instance
-  void logout() {
-    _authService.signOut();
+  void logout(BuildContext context) async {
+    // Tampilkan dialog konfirmasi
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Konfirmasi Logout"),
+            content: const Text("Apakah kamu yakin ingin logout?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false), // Tidak logout
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true), // Lanjut logout
+                child: const Text("Logout"),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldLogout == true) {
+      await _authService.signOut();
+
+      // Pindah ke LoginPage & hapus semua route sebelumnya
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage(onTap: () {})),
+        (route) => false,
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
+    }
   }
 
   @override
@@ -30,7 +63,10 @@ class HomePage extends StatelessWidget {
         foregroundColor: Colors.grey,
         elevation: 0,
         actions: [
-          IconButton(onPressed: logout, icon: const Icon(Icons.logout)),
+          IconButton(
+            onPressed: () => logout(context),
+            icon: const Icon(Icons.logout),
+          ),
         ], // Added const for Icon
       ),
       drawer: const MyDrawer(),
