@@ -1,10 +1,41 @@
 import 'package:flutter/material.dart';
-import '../services/auth/auth_service.dart';
-import '../pages/settings_page.dart';
-import '../pages/login_page.dart'; // <- Tambahkan ini
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class MyDrawer extends StatelessWidget {
+import '../pages/settings_page.dart';
+import '../pages/login_page.dart';
+import '../pages/profile_page.dart';
+import '../services/auth/auth_service.dart';
+
+class MyDrawer extends StatefulWidget {
   const MyDrawer({super.key});
+
+  @override
+  State<MyDrawer> createState() => _MyDrawerState();
+}
+
+class _MyDrawerState extends State<MyDrawer> {
+  String? profileImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  void fetchUserData() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final doc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final data = doc.data();
+      if (data != null && data['photoUrl'] != null) {
+        setState(() {
+          profileImageUrl = data['photoUrl'];
+        });
+      }
+    }
+  }
 
   void logout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
@@ -30,12 +61,10 @@ class MyDrawer extends StatelessWidget {
       final auth = AuthService();
       await auth.signOut();
 
-      // Tampilkan SnackBar setelah logout berhasil
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
 
-      // Arahkan ke halaman login dan hapus semua halaman sebelumnya
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginPage(onTap: () {})),
@@ -53,18 +82,24 @@ class MyDrawer extends StatelessWidget {
         children: [
           Column(
             children: [
-              // logo
+              // Drawer Header with Profile Image
               DrawerHeader(
                 child: Center(
-                  child: Icon(
-                    Icons.message,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 40,
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage:
+                        (profileImageUrl != null && profileImageUrl!.isNotEmpty)
+                            ? NetworkImage(profileImageUrl!)
+                            : const AssetImage(
+                                  'assets/images/default_profile.jpg',
+                                )
+                                as ImageProvider,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
 
-              // home list tile
+              // Home
               Padding(
                 padding: const EdgeInsets.only(left: 25.0),
                 child: ListTile(
@@ -76,7 +111,25 @@ class MyDrawer extends StatelessWidget {
                 ),
               ),
 
-              // settings list tile
+              // Profile
+              Padding(
+                padding: const EdgeInsets.only(left: 25.0),
+                child: ListTile(
+                  title: const Text("P R O F I L E"),
+                  leading: const Icon(Icons.person),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Settings
               Padding(
                 padding: const EdgeInsets.only(left: 25.0),
                 child: ListTile(
@@ -96,13 +149,13 @@ class MyDrawer extends StatelessWidget {
             ],
           ),
 
-          // logout list tile
+          // Logout
           Padding(
             padding: const EdgeInsets.only(left: 25.0, bottom: 25.0),
             child: ListTile(
               title: const Text("L O G O U T"),
               leading: const Icon(Icons.logout),
-              onTap: () => logout(context), // ← Gunakan context
+              onTap: () => logout(context),
             ),
           ),
         ],
