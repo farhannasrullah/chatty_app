@@ -1,9 +1,9 @@
 import 'package:chatty_app/Components/my_button.dart';
 import 'package:chatty_app/Components/my_textfield.dart';
+import 'package:chatty_app/Pages/home_page.dart';
 import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // <-- tambahkan ini untuk menangani FirebaseAuthException
-import '../Pages/home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
@@ -14,14 +14,12 @@ class LoginPage extends StatelessWidget {
 
   void login(BuildContext context) async {
     final authService = AuthService();
+    final email = _emailController.text.trim();
+    final password = _pwController.text.trim();
 
     try {
-      await authService.signInwithEmailPassword(
-        _emailController.text.trim(),
-        _pwController.text.trim(),
-      );
+      await authService.signInwithEmailPassword(email, password);
 
-      // Pop-up jika login berhasil
       showDialog(
         context: context,
         builder:
@@ -53,6 +51,10 @@ class LoginPage extends StatelessWidget {
         errorMessage = 'Terjadi kesalahan: ${e.message}';
       }
 
+      // Kosongkan field
+      _emailController.clear();
+      _pwController.clear();
+
       showDialog(
         context: context,
         builder:
@@ -68,6 +70,10 @@ class LoginPage extends StatelessWidget {
             ),
       );
     } catch (e) {
+      // Kosongkan field
+      _emailController.clear();
+      _pwController.clear();
+
       showDialog(
         context: context,
         builder:
@@ -133,7 +139,7 @@ class LoginPage extends StatelessWidget {
                 GestureDetector(
                   onTap: onTap,
                   child: Text(
-                    "Buat sekarang",
+                    " Buat sekarang",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary,
