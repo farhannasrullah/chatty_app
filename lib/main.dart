@@ -4,6 +4,7 @@ import 'package:chatty_app/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:chatty_app/services/auth/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginOrRegister(),
+      home: const AuthGate(), // ⬅ Ganti dari LoginOrRegister ke AuthGate
       theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }

@@ -3,137 +3,119 @@ import 'package:chatty_app/Components/my_textfield.dart';
 import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
+  final VoidCallback? onTap;
+
+  const RegisterPage({super.key, required this.onTap});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pwController = TextEditingController();
   final TextEditingController _confirmpwController = TextEditingController();
-  final void Function()? onTap;
+  final AuthService _auth = AuthService();
 
-  RegisterPage({super.key, required this.onTap});
-
-  void register(BuildContext context) async {
-    final _auth = AuthService();
-    if (_pwController.text == _confirmpwController.text) {
-      try {
-        await _auth.signUpWithEmailPassword(
-          _emailController.text,
-          _pwController.text,
-        );
-
-        // Menampilkan dialog sukses
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text("Selamat!"),
-                content: const Text("Registrasi Anda berhasil."),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Tutup dialog
-                      onTap?.call(); // Pindah ke halaman login
-                    },
-                    child: const Text("OK"),
-                  ),
-                ],
+  void _showAlertDialog(String title, String content, {VoidCallback? onOk}) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (onOk != null) onOk();
+                },
+                child: const Text("OK"),
               ),
-        );
-      } catch (e) {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text("Email dan password tidak valid"),
-                // Menampilkan pesan error
-                content: Text(e.toString()),
-              ),
-        );
-      }
-    } else {
-      showDialog(
-        context: context,
-        builder:
-            (context) => const AlertDialog(title: Text("Password tidak cocok")),
-      );
+            ],
+          ),
+    );
+  }
+
+  void _register() async {
+    final email = _emailController.text.trim();
+    final password = _pwController.text.trim();
+    final confirmPassword = _confirmpwController.text.trim();
+
+    if (password != confirmPassword) {
+      _showAlertDialog("Gagal", "Password tidak cocok");
+      return;
+    }
+
+    try {
+      await _auth.signUpWithEmailPassword(email, password);
+      _showAlertDialog("Berhasil", "Registrasi berhasil", onOk: widget.onTap);
+    } catch (e) {
+      _showAlertDialog("Registrasi Gagal", e.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: theme.background,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            //logo
-            Icon(
-              Icons.message,
-              size: 60,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-
-            const SizedBox(height: 50),
-
-            Text(
-              "Buat Akun",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 16,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/images/logo.png', height: 160, width: 160),
+              const SizedBox(height: 50),
+              Text(
+                "Buat Akun",
+                style: TextStyle(fontSize: 16, color: theme.primary),
               ),
-            ),
-
-            const SizedBox(height: 25),
-
-            MyTextfield(
-              hintText: "Email",
-              obscureText: false,
-              controller: _emailController,
-            ),
-
-            const SizedBox(height: 10),
-
-            MyTextfield(
-              hintText: "Password",
-              obscureText: true,
-              controller: _pwController,
-            ),
-
-            const SizedBox(height: 10),
-
-            MyTextfield(
-              hintText: "Konfirmasi Password",
-              obscureText: true,
-              controller: _confirmpwController,
-            ),
-
-            const SizedBox(height: 25),
-
-            MyButton(text: "Register", onTap: () => register(context)),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Sudah punya akun?",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
+              const SizedBox(height: 25),
+              MyTextfield(
+                hintText: "Email",
+                obscureText: false,
+                controller: _emailController,
+              ),
+              const SizedBox(height: 10),
+              MyTextfield(
+                hintText: "Password",
+                obscureText: true,
+                controller: _pwController,
+              ),
+              const SizedBox(height: 10),
+              MyTextfield(
+                hintText: "Konfirmasi Password",
+                obscureText: true,
+                controller: _confirmpwController,
+              ),
+              const SizedBox(height: 25),
+              MyButton(text: "Register", onTap: _register),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Sudah punya akun?",
+                    style: TextStyle(color: theme.primary),
                   ),
-                ),
-
-                GestureDetector(
-                  onTap: onTap,
-                  child: Text(
-                    "Login sekarang",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                  GestureDetector(
+                    onTap: widget.onTap,
+                    child: Text(
+                      " Login sekarang",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primary,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

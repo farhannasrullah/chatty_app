@@ -99,11 +99,7 @@ class LoginPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.message,
-              size: 60,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            Image.asset('assets/images/logo.png', height: 160, width: 160),
             const SizedBox(height: 50),
             Text(
               "Selamat datang kembali",
