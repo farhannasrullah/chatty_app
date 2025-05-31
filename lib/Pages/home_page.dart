@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../Components/my_drawer.dart';
 import '../Pages/Login_Page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:intl/intl.dart'; // Untuk format waktu
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -79,7 +79,6 @@ class HomePage extends StatelessWidget {
           return const Center(child: Text("Tidak ada pengguna ditemukan"));
         }
 
-        // Sort user berdasarkan lastMessageTimestamp descending
         final List<Map<String, dynamic>> users = snapshot.data!;
         users.sort((a, b) {
           Timestamp tsA = a['lastMessageTimestamp'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
@@ -105,11 +104,28 @@ class HomePage extends StatelessWidget {
     final currentUserEmail = _authService.getCurentUser()?.email;
 
     if (currentUserEmail != null && userData["email"] != currentUserEmail) {
-      final String userEmail = userData["email"] as String? ?? "No Email";
-      final String userID = userData["uid"] as String? ?? "";
+      final String userEmail = userData["email"] ?? "No Email";
+      final String userID = userData["uid"] ?? "";
+
+      // Format waktu terakhir pesan
+      String? formattedTime;
+      if (userData["lastMessageTimestamp"] != null) {
+        final Timestamp timestamp = userData["lastMessageTimestamp"];
+        final DateTime dateTime = timestamp.toDate();
+        final now = DateTime.now();
+
+        if (now.difference(dateTime).inDays == 0) {
+          // Tampilkan jam jika hari ini
+          formattedTime = DateFormat('HH:mm').format(dateTime);
+        } else {
+          // Tampilkan tanggal jika hari lain
+          formattedTime = DateFormat('dd/MM').format(dateTime);
+        }
+      }
 
       return UserTile(
         text: userEmail,
+        time: formattedTime,
         onTap: () {
           Navigator.push(
             context,
@@ -123,7 +139,7 @@ class HomePage extends StatelessWidget {
         },
       );
     } else {
-      return null; // Jangan tampilkan user yang sama dengan current user
+      return null;
     }
   }
 }
