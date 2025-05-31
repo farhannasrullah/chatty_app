@@ -4,53 +4,44 @@ import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:chatty_app/services/chat/chat_service.dart';
 import 'package:flutter/material.dart';
 import '../Components/my_drawer.dart';
-import '../Pages/Login_Page.dart'; // Pastikan path ini benar
+import '../Pages/Login_Page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   final ChatService _chatService = ChatService();
-  final AuthService _authService = AuthService(); // Use this instance
+  final AuthService _authService = AuthService();
 
-  // void logout() { // Original logout
-  //   final auth = AuthService(); // Unnecessary new instance
-  //   auth.signOut();
-  // }
-
-  // Corrected logout to use the existing _authService instance
   void logout(BuildContext context) async {
-    // Tampilkan dialog konfirmasi
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Konfirmasi Logout"),
-            content: const Text("Apakah kamu yakin ingin logout?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false), // Tidak logout
-                child: const Text("Batal"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true), // Lanjut logout
-                child: const Text("Logout"),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text("Konfirmasi Logout"),
+        content: const Text("Apakah kamu yakin ingin logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Batal"),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
     );
 
     if (shouldLogout == true) {
       await _authService.signOut();
-
-      // Pindah ke LoginPage & hapus semua route sebelumnya
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginPage(onTap: () {})),
         (route) => false,
       );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Berhasil logout")));
     }
   }
 
@@ -67,7 +58,7 @@ class HomePage extends StatelessWidget {
             onPressed: () => logout(context),
             icon: const Icon(Icons.logout),
           ),
-        ], // Added const for Icon
+        ],
       ),
       drawer: const MyDrawer(),
       body: _buildUserList(),
@@ -75,68 +66,64 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildUserList() {
-    return StreamBuilder(
+    return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _chatService.getUsersStream(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text("Error");
+          return const Center(child: Text("Error memuat daftar pengguna"));
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("Loading..");
+          return const Center(child: CircularProgressIndicator());
         }
-        // It's good practice to check if snapshot.data is null before using '!'
-        if (snapshot.data == null) {
-          return const Text(
-            "No users found.",
-          ); // Or some other appropriate widget
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("Tidak ada pengguna ditemukan"));
         }
+
+        // Sort user berdasarkan lastMessageTimestamp descending
+        final List<Map<String, dynamic>> users = snapshot.data!;
+        users.sort((a, b) {
+          Timestamp tsA = a['lastMessageTimestamp'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
+          Timestamp tsB = b['lastMessageTimestamp'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
+          return tsB.compareTo(tsA);
+        });
+
         return ListView(
-          children:
-              snapshot.data!
-                  .map<Widget>(
-                    // Changed UserData to userData for convention
-                    (userData) => _buildUserListItem(userData, context),
-                  )
-                  .toList(),
+          children: users
+              .map((userData) => _buildUserListItem(userData, context))
+              .where((widget) => widget != null)
+              .cast<Widget>()
+              .toList(),
         );
       },
     );
   }
 
-  Widget _buildUserListItem(
-    // Changed UserData to userData for convention
+  Widget? _buildUserListItem(
     Map<String, dynamic> userData,
     BuildContext context,
   ) {
-    // Assuming the current user's email is available and not null
     final currentUserEmail = _authService.getCurentUser()?.email;
 
-    // Ensure currentUserEmail is not null before comparison
     if (currentUserEmail != null && userData["email"] != currentUserEmail) {
-      // Consistently use "email" (or whatever the correct key is)
-      // Make sure the key "email" exists and is what you intend to display/pass
-      final String userEmail =
-          userData["email"] as String? ?? "No Email"; // Provide a fallback
-      final String userID =
-          userData["uid"] as String? ?? ""; // Provide a fallback
+      final String userEmail = userData["email"] as String? ?? "No Email";
+      final String userID = userData["uid"] as String? ?? "";
 
       return UserTile(
-        text: userEmail, // Use the corrected key
+        text: userEmail,
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder:
-                  (context) => ChatPage(
-                    receiverEmail: userEmail, // Use the corrected key
-                    receiverID: userID, // Make sure "uid" is the correct key
-                  ),
+              builder: (context) => ChatPage(
+                receiverEmail: userEmail,
+                receiverID: userID,
+              ),
             ),
           );
         },
       );
     } else {
-      return Container(); // Don't show the current user or if email is missing
+      return null; // Jangan tampilkan user yang sama dengan current user
     }
   }
 }
