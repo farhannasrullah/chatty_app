@@ -182,6 +182,7 @@ class _ChatPageState extends State<ChatPage> {
       return ChatBubble(
         message: data['message'] as String? ?? "[Pesan tidak valid]",
         isCurrentUser: false,
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
       );
     }
 
@@ -202,6 +203,7 @@ class _ChatPageState extends State<ChatPage> {
             data['message'] as String? ??
             "[Pesan Kosong]", // Fallback jika message null
         isCurrentUser: isCurrentUser,
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
       ),
     );
   }
