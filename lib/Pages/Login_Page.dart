@@ -4,6 +4,7 @@ import 'package:chatty_app/Pages/home_page.dart';
 import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
@@ -19,6 +20,19 @@ class LoginPage extends StatelessWidget {
 
     try {
       await authService.signInwithEmailPassword(email, password);
+
+      // Ambil UID dan load displayName dari Firestore
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        final doc =
+            await FirebaseFirestore.instance.collection('Users').doc(uid).get();
+        final data = doc.data();
+        if (data != null && data['displayName'] != null) {
+          await FirebaseAuth.instance.currentUser?.updateDisplayName(
+            data['displayName'],
+          );
+        }
+      }
 
       showDialog(
         context: context,

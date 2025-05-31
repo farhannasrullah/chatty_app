@@ -9,6 +9,7 @@ class AuthService {
     return _auth.currentUser;
   }
 
+  // LOGIN
   Future<UserCredential> signInwithEmailPassword(String email, password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -16,10 +17,26 @@ class AuthService {
         password: password,
       );
 
-      _firestore.collection("Users").doc(userCredential.user!.uid).set({
-        'uid': userCredential.user!.uid,
+      final uid = userCredential.user!.uid;
+
+      // Ambil data user dari Firestore
+      final doc = await _firestore.collection("Users").doc(uid).get();
+      final data = doc.data();
+
+      if (data != null) {
+        final name = data['displayName'] ?? '';
+        final photoURL = data['photoURL'] ?? '';
+
+        // Sync ke FirebaseAuth profile
+        await userCredential.user!.updateDisplayName(name);
+        await userCredential.user!.updatePhotoURL(photoURL);
+      }
+
+      // OPTIONAL: Tambahkan email jika belum ada (jaga-jaga)
+      await _firestore.collection("Users").doc(uid).set({
+        'uid': uid,
         'email': email,
-      });
+      }, SetOptions(merge: true));
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -27,6 +44,7 @@ class AuthService {
     }
   }
 
+  // REGISTER
   Future<UserCredential> signUpWithEmailPassword(
     String email,
     String password,
@@ -56,6 +74,7 @@ class AuthService {
     }
   }
 
+  // LOGOUT
   Future<void> signOut() async {
     return await _auth.signOut();
   }

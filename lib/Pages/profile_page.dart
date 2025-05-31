@@ -105,6 +105,9 @@ class _ProfilePageState extends State<ProfilePage> {
           'displayName': newName,
         });
 
+        // Update juga ke FirebaseAuth
+        await FirebaseAuth.instance.currentUser?.updateDisplayName(newName);
+
         setState(() {
           displayName = newName;
         });
