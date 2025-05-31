@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../pages/settings_page.dart';
 import '../pages/login_page.dart';
 import '../pages/profile_page.dart';
+import '../pages/register_page.dart'; // Added import for RegisterPage
 import '../services/auth/auth_service.dart';
 
 class MyDrawer extends StatefulWidget {
@@ -67,7 +68,24 @@ class _MyDrawerState extends State<MyDrawer> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage(onTap: () {})),
+        MaterialPageRoute(
+          builder:
+              (context) => LoginPage(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => RegisterPage(
+                            onTap: () {
+                              Navigator.pop(context); // Kembali ke LoginPage
+                            },
+                          ),
+                    ),
+                  );
+                },
+              ),
+        ),
         (route) => false,
       );
     }

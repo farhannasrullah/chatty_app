@@ -47,7 +47,12 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RegisterPage(onTap: () {}),
+                      builder:
+                          (context) => RegisterPage(
+                            onTap: () {
+                              Navigator.pop(context); // Kembali ke LoginPage
+                            },
+                          ),
                     ),
                   );
                 },
