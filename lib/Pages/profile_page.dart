@@ -30,7 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final doc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+          await FirebaseFirestore.instance.collection('Users').doc(uid).get();
       final data = doc.data();
       if (data != null) {
         setState(() {
@@ -73,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
       await storageRef.putFile(_selectedImage!);
       final url = await storageRef.getDownloadURL();
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+      await FirebaseFirestore.instance.collection('Users').doc(uid).update({
         'photoUrl': url,
       });
 
@@ -101,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (uid != null && newName.isNotEmpty) {
       try {
-        await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        await FirebaseFirestore.instance.collection('Users').doc(uid).update({
           'displayName': newName,
         });
 

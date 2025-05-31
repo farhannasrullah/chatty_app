@@ -13,6 +13,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pwController = TextEditingController();
   final TextEditingController _confirmpwController = TextEditingController();
@@ -42,6 +43,11 @@ class _RegisterPageState extends State<RegisterPage> {
     final email = _emailController.text.trim();
     final password = _pwController.text.trim();
     final confirmPassword = _confirmpwController.text.trim();
+    final name = _nameController.text.trim();
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showAlertDialog("Gagal", "Semua field harus diisi");
+      return;
+    }
 
     if (password != confirmPassword) {
       _showAlertDialog("Gagal", "Password tidak cocok");
@@ -49,7 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     try {
-      await _auth.signUpWithEmailPassword(email, password);
+      await _auth.signUpWithEmailPassword(email, password, name);
       _showAlertDialog("Berhasil", "Registrasi berhasil", onOk: widget.onTap);
     } catch (e) {
       _showAlertDialog("Registrasi Gagal", e.toString());
@@ -75,6 +81,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 style: TextStyle(fontSize: 16, color: theme.primary),
               ),
               const SizedBox(height: 25),
+              MyTextfield(
+                hintText: "Nama Lengkap",
+                obscureText: false,
+                controller: _nameController,
+              ),
+              const SizedBox(height: 10),
+
               MyTextfield(
                 hintText: "Email",
                 obscureText: false,

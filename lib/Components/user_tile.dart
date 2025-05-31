@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class UserTile extends StatelessWidget {
   final String text;
   final String? time; // Waktu terakhir chat
+  final String? photoUrl; // URL foto pengguna (opsional)
   final void Function()? onTap;
 
   const UserTile({
@@ -10,6 +11,7 @@ class UserTile extends StatelessWidget {
     required this.text,
     required this.onTap,
     this.time,
+    this.photoUrl,
   });
 
   @override

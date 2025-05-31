@@ -17,20 +17,21 @@ class HomePage extends StatelessWidget {
   void logout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Konfirmasi Logout"),
-        content: const Text("Apakah kamu yakin ingin logout?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Batal"),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Konfirmasi Logout"),
+            content: const Text("Apakah kamu yakin ingin logout?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Logout"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Logout"),
-          ),
-        ],
-      ),
     );
 
     if (shouldLogout == true) {
@@ -40,8 +41,9 @@ class HomePage extends StatelessWidget {
         MaterialPageRoute(builder: (context) => LoginPage(onTap: () {})),
         (route) => false,
       );
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Berhasil logout")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
     }
   }
 
@@ -81,17 +83,22 @@ class HomePage extends StatelessWidget {
 
         final List<Map<String, dynamic>> users = snapshot.data!;
         users.sort((a, b) {
-          Timestamp tsA = a['lastMessageTimestamp'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
-          Timestamp tsB = b['lastMessageTimestamp'] ?? Timestamp.fromMillisecondsSinceEpoch(0);
+          Timestamp tsA =
+              a['lastMessageTimestamp'] ??
+              Timestamp.fromMillisecondsSinceEpoch(0);
+          Timestamp tsB =
+              b['lastMessageTimestamp'] ??
+              Timestamp.fromMillisecondsSinceEpoch(0);
           return tsB.compareTo(tsA);
         });
 
         return ListView(
-          children: users
-              .map((userData) => _buildUserListItem(userData, context))
-              .where((widget) => widget != null)
-              .cast<Widget>()
-              .toList(),
+          children:
+              users
+                  .map((userData) => _buildUserListItem(userData, context))
+                  .where((widget) => widget != null)
+                  .cast<Widget>()
+                  .toList(),
         );
       },
     );
@@ -104,7 +111,11 @@ class HomePage extends StatelessWidget {
     final currentUserEmail = _authService.getCurentUser()?.email;
 
     if (currentUserEmail != null && userData["email"] != currentUserEmail) {
-      final String userEmail = userData["email"] ?? "No Email";
+      final String displayName =
+          userData["displayName"] ??
+          userData["email"]?.replaceAll(RegExp(r'(?<=.).(?=[^@]*?@)'), '*') ??
+          "No Name";
+      final String photoUrl = userData["photoURL"] ?? "";
       final String userID = userData["uid"] ?? "";
 
       // Format waktu terakhir pesan
@@ -115,25 +126,23 @@ class HomePage extends StatelessWidget {
         final now = DateTime.now();
 
         if (now.difference(dateTime).inDays == 0) {
-          // Tampilkan jam jika hari ini
           formattedTime = DateFormat('HH:mm').format(dateTime);
         } else {
-          // Tampilkan tanggal jika hari lain
           formattedTime = DateFormat('dd/MM').format(dateTime);
         }
       }
 
       return UserTile(
-        text: userEmail,
+        text: displayName,
         time: formattedTime,
+        photoUrl: photoUrl,
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ChatPage(
-                receiverEmail: userEmail,
-                receiverID: userID,
-              ),
+              builder:
+                  (context) =>
+                      ChatPage(receiverEmail: displayName, receiverID: userID),
             ),
           );
         },

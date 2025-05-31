@@ -5,19 +5,21 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  User? getCurentUser(){
+  User? getCurentUser() {
     return _auth.currentUser;
   }
 
   Future<UserCredential> signInwithEmailPassword(String email, password) async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password,);
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-       _firestore.collection("Users").doc(userCredential.user!.uid).set({
-      'uid': userCredential.user!.uid,
-      'email': email,
-    },);
-
+      _firestore.collection("Users").doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'email': email,
+      });
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -25,25 +27,36 @@ class AuthService {
     }
   }
 
-  Future<UserCredential> signUpWithEmailPassword(String email, password) async{
+  Future<UserCredential> signUpWithEmailPassword(
+    String email,
+    String password,
+    String name, {
+    String? photoURL,
+  }) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    _firestore.collection("Users").doc(userCredential.user!.uid).set({
-      'uid': userCredential.user!.uid,
-      'email': email,
-    },);
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-    return userCredential;
-    } on FirebaseAuthException catch (e){
+      await _firestore.collection("Users").doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'email': email,
+        'displayName': name,
+        'photoURL': photoURL ?? '',
+      });
+
+      // Update FirebaseAuth profile
+      await userCredential.user!.updateDisplayName(name);
+      if (photoURL != null) {
+        await userCredential.user!.updatePhotoURL(photoURL);
+      }
+
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
       throw Exception(e.code);
     }
   }
 
-  Future<void> signOut() async{
+  Future<void> signOut() async {
     return await _auth.signOut();
   }
-
 }
