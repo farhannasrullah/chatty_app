@@ -7,6 +7,8 @@ import '../Components/my_drawer.dart';
 import '../Pages/Login_Page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Untuk format waktu
+import '../Pages/Register_Page.dart';
+import '../Pages/Login_Page.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -38,9 +40,22 @@ class HomePage extends StatelessWidget {
       await _authService.signOut();
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage(onTap: () {})),
+        MaterialPageRoute(
+          builder:
+              (context) => LoginPage(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterPage(onTap: () {}),
+                    ),
+                  );
+                },
+              ),
+        ),
         (route) => false,
       );
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
