@@ -11,7 +11,9 @@ class ChatService {
       return snapshot.docs.map((doc) {
         final user = doc.data();
         if (!user.containsKey("lastMessageTimestamp")) {
-          user["lastMessageTimestamp"] = Timestamp.fromMillisecondsSinceEpoch(0);
+          user["lastMessageTimestamp"] = Timestamp.fromMillisecondsSinceEpoch(
+            0,
+          );
         }
         return user;
       }).toList();
@@ -34,11 +36,18 @@ class ChatService {
       receiverID: receiverID,
       message: message,
       timestamp: timestamp,
+      lastMessage: message,
     );
 
     List<String> ids = [currentUserID, receiverID];
     ids.sort();
     String chatRoomID = ids.join('_');
+    await _firestore.collection("chat_rooms").doc(chatRoomID).set({
+      'lastMessage': message,
+      'lastMessageTimestamp': timestamp,
+      'lastSenderID': currentUserID, // ✅ Tambahkan ini
+      'participants': [currentUserID, receiverID],
+    }, SetOptions(merge: true));
 
     await _firestore
         .collection("chat_rooms")
@@ -57,6 +66,40 @@ class ChatService {
     ]);
   }
 
+  Future<String?> getLastMessage(String chatId) async {
+    final snapshot =
+        await _firestore
+            .collection('chat_rooms')
+            .doc(chatId)
+            .collection('messages')
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first['message'];
+    } else {
+      return null;
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> getChatRooms() {
+    final String currentUserID = _auth.currentUser!.uid;
+
+    return _firestore
+        .collection("chat_rooms")
+        .where("participants", arrayContains: currentUserID)
+        .orderBy("lastMessageTimestamp", descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['chatRoomID'] = doc.id;
+            return data;
+          }).toList();
+        });
+  }
+
   Stream<QuerySnapshot> getMessages(String userID, String otherUserID) {
     List<String> ids = [userID, otherUserID];
     ids.sort();
@@ -70,5 +113,34 @@ class ChatService {
         .collection("messages")
         .orderBy("timestamp", descending: false)
         .snapshots();
+  }
+
+  Stream<Map<String, dynamic>?> getLastMessageBetween(
+    String userId1,
+    String userId2,
+  ) {
+    List<String> ids = [userId1, userId2];
+    ids.sort();
+    String chatRoomID = ids.join('_');
+
+    return _firestore
+        .collection("chat_rooms")
+        .doc(chatRoomID)
+        .collection("messages")
+        .orderBy("timestamp", descending: true)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            final doc = snapshot.docs.first;
+            return {
+              'message': doc['message'],
+              'timestamp': doc['timestamp'],
+              'senderID': doc['senderID'],
+            };
+          } else {
+            return null;
+          }
+        });
   }
 }

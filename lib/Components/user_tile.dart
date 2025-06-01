@@ -1,48 +1,67 @@
 import 'package:flutter/material.dart';
 
 class UserTile extends StatelessWidget {
-  final String text;
-  final String? time; // Waktu terakhir chat
-  final String? photoUrl; // URL foto pengguna (opsional)
+  final String text; // Nama pengguna
+  final String? subtitle; // Pesan terakhir
+  final String? time; // Waktu pesan terakhir
+  final String? photoUrl; // URL foto profil
+  final String? lastSenderId; // ID pengirim pesan terakhir
+  final String? currentUserId; // ID pengguna saat ini
   final void Function()? onTap;
 
   const UserTile({
     super.key,
     required this.text,
-    required this.onTap,
+    this.subtitle,
     this.time,
     this.photoUrl,
+    this.lastSenderId,
+    this.currentUserId,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    String prefix = '';
+    if (lastSenderId != null && currentUserId != null) {
+      prefix = lastSenderId == currentUserId ? 'You: ' : '';
+    }
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondary,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.person),
-                const SizedBox(width: 20),
-                Text(text),
-              ],
-            ),
-            if (time != null)
-              Text(
-                time!,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-          ],
+      leading: CircleAvatar(
+        radius: 25,
+        backgroundImage:
+            (photoUrl != null && photoUrl!.isNotEmpty)
+                ? NetworkImage(photoUrl!)
+                : null,
+        child:
+            (photoUrl == null || photoUrl!.isEmpty)
+                ? const Icon(Icons.person, size: 30)
+                : null,
+      ),
+      title: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Text(
+        subtitle != null && subtitle!.isNotEmpty
+            ? '$prefix$subtitle'
+            : 'Tidak ada pesan terakhir',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: subtitle == null || subtitle!.isEmpty ? Colors.grey : null,
+          fontStyle:
+              subtitle == null || subtitle!.isEmpty ? FontStyle.italic : null,
         ),
       ),
+
+      trailing:
+          time != null
+              ? Text(
+                time!,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              )
+              : null,
     );
   }
 }

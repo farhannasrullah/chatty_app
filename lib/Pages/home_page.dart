@@ -8,7 +8,6 @@ import '../Pages/Login_Page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Untuk format waktu
 import '../Pages/Register_Page.dart';
-import '../Pages/Login_Page.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -128,47 +127,55 @@ class HomePage extends StatelessWidget {
     Map<String, dynamic> userData,
     BuildContext context,
   ) {
-    final currentUserEmail = _authService.getCurentUser()?.email;
-
-    if (currentUserEmail != null && userData["email"] != currentUserEmail) {
-      final String displayName =
-          userData["displayName"] ??
-          userData["email"]?.replaceAll(RegExp(r'(?<=.).(?=[^@]*?@)'), '*') ??
-          "No Name";
-      final String photoUrl = userData["photoURL"] ?? "";
-      final String userID = userData["uid"] ?? "";
-
-      // Format waktu terakhir pesan
-      String? formattedTime;
-      if (userData["lastMessageTimestamp"] != null) {
-        final Timestamp timestamp = userData["lastMessageTimestamp"];
-        final DateTime dateTime = timestamp.toDate();
-        final now = DateTime.now();
-
-        if (now.difference(dateTime).inDays == 0) {
-          formattedTime = DateFormat('HH:mm').format(dateTime);
-        } else {
-          formattedTime = DateFormat('dd/MM').format(dateTime);
-        }
-      }
-
-      return UserTile(
-        text: displayName,
-        time: formattedTime,
-        photoUrl: photoUrl,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) =>
-                      ChatPage(receiverEmail: displayName, receiverID: userID),
-            ),
-          );
-        },
-      );
-    } else {
+    final currentUser = _authService.getCurentUser();
+    if (currentUser == null || userData["email"] == currentUser.email)
       return null;
-    }
+
+    final String displayName =
+        userData["displayName"] ?? userData["email"] ?? "No Name";
+    final String photoUrl = userData["photoURL"] ?? "";
+    final String userID = userData["uid"] ?? "";
+
+    return StreamBuilder<Map<String, dynamic>?>(
+      stream: _chatService.getLastMessageBetween(currentUser.uid, userID),
+      builder: (context, snapshot) {
+        final lastMessageData = snapshot.data;
+        final lastMessage = lastMessageData?['message'] ?? '';
+        final lastSenderId = lastMessageData?['senderID'];
+        final timestamp = lastMessageData?['timestamp'] as Timestamp?;
+
+        String? formattedTime;
+        if (timestamp != null) {
+          final DateTime dateTime = timestamp.toDate();
+          final now = DateTime.now();
+          if (now.difference(dateTime).inDays == 0) {
+            formattedTime = DateFormat('HH:mm').format(dateTime);
+          } else {
+            formattedTime = DateFormat('dd/MM').format(dateTime);
+          }
+        }
+
+        return UserTile(
+          text: displayName,
+          subtitle: lastMessage,
+          time: formattedTime,
+          photoUrl: photoUrl,
+          lastSenderId: lastSenderId,
+          currentUserId: currentUser.uid,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => ChatPage(
+                      receiverEmail: displayName,
+                      receiverID: userID,
+                    ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
