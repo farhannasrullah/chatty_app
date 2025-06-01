@@ -29,6 +29,32 @@ class _ChatPageState extends State<ChatPage> {
   Stream<QuerySnapshot>? _messageStream;
   Stream<DocumentSnapshot>? _receiverStatusStream;
 
+  void _showDeleteDialog(DocumentReference messageRef) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Hapus Pesan"),
+            content: const Text("Yakin ingin menghapus pesan ini?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await messageRef.update({
+                    'message': 'Pesan ini telah dihapus',
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -247,27 +273,26 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageItem(DocumentSnapshot document) {
     Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
 
-    if (data == null) {
-      return const SizedBox.shrink();
-    }
+    if (data == null) return const SizedBox.shrink();
 
     final currentUser = _authService.getCurentUser();
-    if (currentUser == null) {
-      return ChatBubble(
-        message: data['message'] as String? ?? "[Pesan tidak valid]",
-        isCurrentUser: false,
-        timestamp: (data['timestamp'] as Timestamp).toDate(),
-      );
-    }
+    if (currentUser == null) return const SizedBox.shrink();
 
     bool isCurrentUser = (data['senderID'] == currentUser.uid);
+    final message = data['message'] ?? "";
 
-    return Container(
-      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: ChatBubble(
-        message: data['message'] as String? ?? "[Pesan Kosong]",
-        isCurrentUser: isCurrentUser,
-        timestamp: (data['timestamp'] as Timestamp).toDate(),
+    return GestureDetector(
+      onLongPress:
+          isCurrentUser && message != "Pesan ini telah dihapus"
+              ? () => _showDeleteDialog(document.reference)
+              : null,
+      child: Container(
+        alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: ChatBubble(
+          message: message,
+          isCurrentUser: isCurrentUser,
+          timestamp: (data['timestamp'] as Timestamp).toDate(),
+        ),
       ),
     );
   }
