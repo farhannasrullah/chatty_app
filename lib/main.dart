@@ -1,5 +1,4 @@
 import 'package:chatty_app/Themes/theme_provider.dart';
-import 'package:chatty_app/services/auth/login_or_register.dart';
 import 'package:chatty_app/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
