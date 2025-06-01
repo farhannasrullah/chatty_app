@@ -8,6 +8,7 @@ class UserTile extends StatelessWidget {
   final String? lastSenderId; // ID pengirim pesan terakhir
   final String? currentUserId; // ID pengguna saat ini
   final int unreadCount;
+  final bool isOnline; // Status online
   final void Function()? onTap;
 
   const UserTile({
@@ -19,6 +20,7 @@ class UserTile extends StatelessWidget {
     this.lastSenderId,
     this.unreadCount = 0,
     this.currentUserId,
+    this.isOnline = false,
     this.onTap,
   });
 
@@ -32,18 +34,49 @@ class UserTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
       onTap: onTap,
-      leading: CircleAvatar(
-        radius: 25,
-        backgroundImage:
-            (photoUrl != null && photoUrl!.isNotEmpty)
-                ? NetworkImage(photoUrl!)
-                : null,
-        child:
-            (photoUrl == null || photoUrl!.isEmpty)
-                ? const Icon(Icons.person, size: 30)
-                : null,
+      leading: Stack(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundImage:
+                (photoUrl != null && photoUrl!.isNotEmpty)
+                    ? NetworkImage(photoUrl!)
+                    : null,
+            child:
+                (photoUrl == null || photoUrl!.isEmpty)
+                    ? const Icon(Icons.person, size: 30)
+                    : null,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isOnline ? Colors.green : Colors.grey,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+            ),
+          ),
+        ],
       ),
-      title: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          if (time != null)
+            Text(
+              time!,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+        ],
+      ),
       subtitle: Text(
         subtitle != null && subtitle!.isNotEmpty
             ? '$prefix$subtitle'
@@ -56,14 +89,6 @@ class UserTile extends StatelessWidget {
               subtitle == null || subtitle!.isEmpty ? FontStyle.italic : null,
         ),
       ),
-
-      trailing:
-          time != null
-              ? Text(
-                time!,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              )
-              : null,
     );
   }
 }

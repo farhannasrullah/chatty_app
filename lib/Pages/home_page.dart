@@ -2,6 +2,7 @@ import 'package:chatty_app/Components/user_tile.dart';
 import 'package:chatty_app/Pages/chat_page.dart';
 import 'package:chatty_app/services/auth/auth_service.dart';
 import 'package:chatty_app/services/chat/chat_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../Components/my_drawer.dart';
 import '../Pages/Login_Page.dart';
@@ -9,11 +10,50 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Untuk format waktu
 import '../Pages/Register_Page.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _updateOnlineStatus(true); // Saat halaman dibuka, set online
+  }
+
+  @override
+  void dispose() {
+    _updateOnlineStatus(false); // Saat halaman ditutup, set offline
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _updateOnlineStatus(true);
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _updateOnlineStatus(false);
+    }
+  }
+
+  Future<void> _updateOnlineStatus(bool isOnline) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('Users').doc(user.uid).update(
+        {'isOnline': isOnline},
+      );
+    }
+  }
 
   void logout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
@@ -36,6 +76,7 @@ class HomePage extends StatelessWidget {
     );
 
     if (shouldLogout == true) {
+      await _updateOnlineStatus(false); // set offline sebelum logout
       await _authService.signOut();
       Navigator.pushAndRemoveUntil(
         context,
@@ -59,7 +100,6 @@ class HomePage extends StatelessWidget {
         ),
         (route) => false,
       );
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Berhasil logout")));
@@ -135,6 +175,7 @@ class HomePage extends StatelessWidget {
         userData["displayName"] ?? userData["email"] ?? "No Name";
     final String photoUrl = userData["photoURL"] ?? "";
     final String userID = userData["uid"] ?? "";
+    final bool isOnline = userData["isOnline"] == true;
 
     return StreamBuilder<Map<String, dynamic>?>(
       stream: _chatService.getLastMessageBetween(currentUser.uid, userID),
@@ -162,6 +203,7 @@ class HomePage extends StatelessWidget {
           photoUrl: photoUrl,
           lastSenderId: lastSenderId,
           currentUserId: currentUser.uid,
+          isOnline: isOnline,
           onTap: () {
             Navigator.push(
               context,

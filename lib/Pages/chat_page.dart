@@ -1,7 +1,7 @@
-import 'package:chatty_app/Components/chat_bubble.dart'; // Sesuaikan path jika perlu
-import 'package:chatty_app/Components/my_textfield.dart'; // Sesuaikan path jika perlu
-import 'package:chatty_app/services/auth/auth_service.dart'; // Sesuaikan path jika perlu
-import 'package:chatty_app/services/chat/chat_service.dart'; // Sesuaikan path jika perlu
+import 'package:chatty_app/Components/chat_bubble.dart';
+import 'package:chatty_app/Components/my_textfield.dart';
+import 'package:chatty_app/services/auth/auth_service.dart';
+import 'package:chatty_app/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -27,6 +27,7 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
 
   Stream<QuerySnapshot>? _messageStream;
+  Stream<DocumentSnapshot>? _receiverStatusStream;
 
   @override
   void initState() {
@@ -37,6 +38,12 @@ class _ChatPageState extends State<ChatPage> {
         widget.receiverID,
         currentUser.uid,
       );
+
+      _receiverStatusStream =
+          FirebaseFirestore.instance
+              .collection('Users')
+              .doc(widget.receiverID)
+              .snapshots();
     }
   }
 
@@ -75,12 +82,10 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // Fungsi bantu: cek apakah dua tanggal sama hari
   bool isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  // Fungsi bantu format label tanggal seperti WA
   String _getFormattedDateLabel(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -91,11 +96,11 @@ class _ChatPageState extends State<ChatPage> {
     } else if (messageDate == today.subtract(const Duration(days: 1))) {
       return "Yesterday";
     } else if (now.difference(messageDate).inDays < 7) {
-      return DateFormat.EEEE().format(date); // nama hari, misal Friday
+      return DateFormat.EEEE().format(date);
     } else if (now.year == date.year) {
-      return DateFormat.MMMd().format(date); // Apr 21
+      return DateFormat.MMMd().format(date);
     } else {
-      return DateFormat.yMMMd().format(date); // Apr 21, 2023
+      return DateFormat.yMMMd().format(date);
     }
   }
 
@@ -103,10 +108,40 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.receiverEmail),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.grey,
         elevation: 0,
+        title: StreamBuilder<DocumentSnapshot>(
+          stream: _receiverStatusStream,
+          builder: (context, snapshot) {
+            String status = "Loading...";
+            if (snapshot.hasData) {
+              final data = snapshot.data!.data() as Map<String, dynamic>?;
+              final isOnline = data?['isOnline'] ?? false;
+              status = isOnline ? "Online" : "Offline";
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.receiverEmail,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: status == "Online" ? Colors.green : Colors.grey,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
       body: Column(
         children: [Expanded(child: _buildMessageList()), _buildUserInput()],
@@ -116,11 +151,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildMessageList() {
     if (_messageStream == null) {
-      return const Center(
-        child: Text(
-          "Tidak dapat memuat pesan. Pengguna tidak terautentikasi atau stream error.",
-        ),
-      );
+      return const Center(child: Text("Tidak dapat memuat pesan."));
     }
 
     return StreamBuilder<QuerySnapshot>(
@@ -165,7 +196,8 @@ class _ChatPageState extends State<ChatPage> {
               final prevDoc = snapshot.data!.docs[index - 1];
               final prevData = prevDoc.data() as Map<String, dynamic>?;
               if (prevData != null && prevData['timestamp'] != null) {
-                final prevTimestamp = (prevData['timestamp'] as Timestamp).toDate();
+                final prevTimestamp =
+                    (prevData['timestamp'] as Timestamp).toDate();
                 if (!isSameDay(prevTimestamp, timestamp)) {
                   showDateHeader = true;
                 }
@@ -179,7 +211,10 @@ class _ChatPageState extends State<ChatPage> {
                 Center(
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(12),
@@ -262,10 +297,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             child: IconButton(
               onPressed: sendMessage,
-              icon: const Icon(
-                Icons.send,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.send, color: Colors.white),
             ),
           ),
         ],
