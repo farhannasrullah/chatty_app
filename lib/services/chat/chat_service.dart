@@ -5,6 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  String getChatRoomId(String userId1, String userId2) {
+    final sortedIds = [userId1, userId2]..sort();
+    return sortedIds.join('_');
+  }
 
   Stream<List<Map<String, dynamic>>> getUsersStream() {
     return _firestore.collection("Users").snapshots().map((snapshot) {

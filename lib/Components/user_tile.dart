@@ -7,6 +7,7 @@ class UserTile extends StatelessWidget {
   final String? photoUrl; // URL foto profil
   final String? lastSenderId; // ID pengirim pesan terakhir
   final String? currentUserId; // ID pengguna saat ini
+  final int unreadCount;
   final void Function()? onTap;
 
   const UserTile({
@@ -16,6 +17,7 @@ class UserTile extends StatelessWidget {
     this.time,
     this.photoUrl,
     this.lastSenderId,
+    this.unreadCount = 0,
     this.currentUserId,
     this.onTap,
   });
