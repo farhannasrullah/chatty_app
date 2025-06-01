@@ -74,6 +74,16 @@ class AuthService {
     }
   }
 
+  Future<void> setUserOnlineStatus(bool isOnline) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection("Users").doc(user.uid).update({
+        'isOnline': isOnline,
+        'lastSeen': FieldValue.serverTimestamp(), // opsional
+      });
+    }
+  }
+
   // LOGOUT
   Future<void> signOut() async {
     return await _auth.signOut();

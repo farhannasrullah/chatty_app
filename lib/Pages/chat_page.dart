@@ -25,6 +25,7 @@ class _ChatPageState extends State<ChatPage> {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
   final ScrollController _scrollController = ScrollController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Stream<QuerySnapshot>? _messageStream;
 
@@ -60,6 +61,21 @@ class _ChatPageState extends State<ChatPage> {
           context,
         ).showSnackBar(SnackBar(content: Text("Gagal mengirim pesan: $e")));
       }
+    }
+  }
+
+  void markMessagesAsRead(String chatRoomID, String senderID) async {
+    final unreadMessages =
+        await _firestore
+            .collection("chat_rooms")
+            .doc(chatRoomID)
+            .collection("messages")
+            .where("senderID", isEqualTo: senderID)
+            .where("isRead", isEqualTo: false)
+            .get();
+
+    for (var doc in unreadMessages.docs) {
+      await doc.reference.update({"isRead": true});
     }
   }
 
@@ -103,14 +119,49 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.receiverEmail),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.grey,
         elevation: 0,
+        title: StreamBuilder<DocumentSnapshot>(
+          stream:
+              FirebaseFirestore.instance
+                  .collection('Users')
+                  .doc(widget.receiverID)
+                  .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return Text(widget.receiverEmail);
+            }
+
+            final userData = snapshot.data!.data() as Map<String, dynamic>;
+            final isOnline = userData['isOnline'] ?? false;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.receiverEmail,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  isOnline ? 'Online' : 'Offline',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isOnline ? Colors.green : Colors.grey,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
-      body: Column(
-        children: [Expanded(child: _buildMessageList()), _buildUserInput()],
-      ),
+
+      // ✅ Tambahkan ini
+      body: _buildMessageList(),
+      bottomNavigationBar: _buildUserInput(),
     );
   }
 
@@ -165,7 +216,8 @@ class _ChatPageState extends State<ChatPage> {
               final prevDoc = snapshot.data!.docs[index - 1];
               final prevData = prevDoc.data() as Map<String, dynamic>?;
               if (prevData != null && prevData['timestamp'] != null) {
-                final prevTimestamp = (prevData['timestamp'] as Timestamp).toDate();
+                final prevTimestamp =
+                    (prevData['timestamp'] as Timestamp).toDate();
                 if (!isSameDay(prevTimestamp, timestamp)) {
                   showDateHeader = true;
                 }
@@ -179,7 +231,10 @@ class _ChatPageState extends State<ChatPage> {
                 Center(
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(12),
@@ -262,10 +317,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             child: IconButton(
               onPressed: sendMessage,
-              icon: const Icon(
-                Icons.send,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.send, color: Colors.white),
             ),
           ),
         ],

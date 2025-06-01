@@ -9,6 +9,7 @@ class UserTile extends StatelessWidget {
   final String? currentUserId; // ID pengguna saat ini
   final int unreadCount;
   final void Function()? onTap;
+  final bool isOnline; // ✅ Tambahkan flag online
 
   const UserTile({
     super.key,
@@ -20,6 +21,7 @@ class UserTile extends StatelessWidget {
     this.unreadCount = 0,
     this.currentUserId,
     this.onTap,
+    required this.isOnline, // ✅ Wajib diisi
   });
 
   @override
@@ -32,16 +34,34 @@ class UserTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
       onTap: onTap,
-      leading: CircleAvatar(
-        radius: 25,
-        backgroundImage:
-            (photoUrl != null && photoUrl!.isNotEmpty)
-                ? NetworkImage(photoUrl!)
-                : null,
-        child:
-            (photoUrl == null || photoUrl!.isEmpty)
-                ? const Icon(Icons.person, size: 30)
-                : null,
+      leading: Stack(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundImage:
+                (photoUrl != null && photoUrl!.isNotEmpty)
+                    ? NetworkImage(photoUrl!)
+                    : null,
+            child:
+                (photoUrl == null || photoUrl!.isEmpty)
+                    ? const Icon(Icons.person, size: 30)
+                    : null,
+          ),
+          if (isOnline)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+              ),
+            ),
+        ],
       ),
       title: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(
@@ -56,7 +76,6 @@ class UserTile extends StatelessWidget {
               subtitle == null || subtitle!.isEmpty ? FontStyle.italic : null,
         ),
       ),
-
       trailing:
           time != null
               ? Text(
