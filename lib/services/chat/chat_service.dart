@@ -70,23 +70,6 @@ class ChatService {
     ]);
   }
 
-  Future<String?> getLastMessage(String chatId) async {
-    final snapshot =
-        await _firestore
-            .collection('chat_rooms')
-            .doc(chatId)
-            .collection('messages')
-            .orderBy('timestamp', descending: true)
-            .limit(1)
-            .get();
-
-    if (snapshot.docs.isNotEmpty) {
-      return snapshot.docs.first['message'];
-    } else {
-      return null;
-    }
-  }
-
   Stream<List<Map<String, dynamic>>> getChatRooms() {
     final String currentUserID = _auth.currentUser!.uid;
 
